@@ -3,7 +3,7 @@
 # Standard library imports
 
 # Remote library imports
-from models import db, Recipe, RecipeIngredient, Ingredient, User
+from models import db, Recipe, RecipeIngredient, Ingredient, User, RecipePost
 from flask_restful import Api, Resource
 from flask_migrate import Migrate
 from flask import Flask, make_response, jsonify, request, session
@@ -20,7 +20,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
-app.secret_key = b'Y\xf1Xz\x00\xad|eQ\x80t \xca\x1a\x10K'
+app.secret_key = 'supersecretkey'
 migrate = Migrate(app, db)
 
 db.init_app(app)
@@ -45,7 +45,7 @@ class Signup(Resource):
             db.session.add(new_user)
             db.session.commit()
             session['user_id'] = new_user.id
-            return make_response(new_user.to_dict(rules=('-_password_hash',)), 201)
+            return make_response(new_user.to_dict(rules=('-_password_hash','-user_recipes.posts', '-user_recipes.user', '-posts.user', '-posts.recipe')), 201)
         except ValueError:
             return make_response({"errors": ["validation errors"]}, 400)
 
@@ -57,7 +57,7 @@ class Login(Resource):
         password = request.json['password']
         if user and user.authenticate(password):
             session['user_id'] = user.id
-            return make_response(user.to_dict(rules=('-_password_hash',)), 201)
+            return make_response(user.to_dict(rules=('-_password_hash','-user_recipes.posts', '-user_recipes.user', '-posts.user', '-posts.recipe')), 201)
         else:
             return make_response('error', 400)
 
@@ -75,7 +75,7 @@ class AutoLogin(Resource):
         if session['user_id']:
             user = User.query.filter(User.id == session['user_id']).first()
             if user:
-                return make_response(user.to_dict(rules=('-_password_hash',)), 200)
+                return make_response(user.to_dict(rules=('-_password_hash','-user_recipes.posts', '-user_recipes.user', '-posts.user', '-posts.recipe')), 200)
             else:
                 return make_response({"errors": "User not found"}, 404)
         else:
@@ -85,10 +85,46 @@ api.add_resource(AutoLogin, '/auto_login')
 
 
 
+class RecipePosts(Resource):
+    def get(self):
+        posts = [post.to_dict(rules=('-user.posts', '-user._password_hash' , '-user.user_recipes','-recipe_id', '-recipe.posts', '-recipe.user')) for post in RecipePost.query.all()]
+        return make_response(posts, 200)
 
+    def post(self):
+        try:
+            new_recipe_post = RecipePost(
+                post_message = request.json['message'],
+                user_id = int(request.json['user_id']),
+                recipe_id = int(request.json['recipe_id'])
+            )
+
+            db.session.add(new_recipe_post)
+            db.session.commit()
+            post_dict = new_recipe_post.to_dict(rules=('-user.posts', '-user._password_hash' , '-user.user_recipes','-recipe_id', '-recipe.posts', '-recipe.user'))
+            return make_response(post_dict, 201)
+        except ValueError:
+            return make_response({"error": "could not post"}, 400)
+    
+api.add_resource(RecipePosts, '/posts')
+
+class RecipePostById(Resource):
+    def delete(self, id):
+        post = RecipePost.query.filter_by(id=id).first()
+        if post:
+            db.session.delete(post)
+            db.session.commit()
+            return make_response({}, 200)
+        else:
+            return make_response({"error": "user not found"}, 404)
+
+api.add_resource(RecipePostById, '/posts/<int:id>')
     
 
 class UserById(Resource):
+
+    def get(self, id):
+        user = User.query.filter_by(id=id).first()
+        return make_response(user.to_dict(rules=('-user_recipes.posts', '-user_recipes.user', '-posts.user', '-posts.recipe')), 200)
         
     def patch(self, id):
         user = User.query.filter_by(id=id).first()
@@ -138,30 +174,51 @@ class Recipes(Resource):
 
             db.session.add(new_recipe)
             db.session.commit()
-            recipe_to_connect = Recipe.query.filter(Recipe.name == request.json['name']).first()
             ingredients = request.json['ingredients']
-            
-            for i in range(len(ingredients)):
-                new_ingredient = Ingredient(
-                    name = ingredients[i]['name'],
-                    calories = ingredients[i]['calories'],
-                    serving_size_g = ingredients[i]['serving_size_g'],
-                    total_carbs = ingredients[i]['carbohydrates_total_g'],
-                    total_protein = ingredients[i]['protein_g'],
-                    total_fat = ingredients[i]['fat_total_g']
-                )
-                db.session.add(new_ingredient)
-                db.session.commit()
-                ingredient_to_connect = Ingredient.query.filter(Ingredient.name == ingredients[i]['name']).first()
-                new_recipe_ingredient = RecipeIngredient(
-                    recipe_id = recipe_to_connect.id,
-                    ingredient_id = ingredient_to_connect.id
-                )
+            if len(ingredients[0]) > 7:
+                recipe_to_connect = Recipe.query.filter(Recipe.name == request.json['name']).order_by(Recipe.id.desc()).first()
+                for i in range(len(ingredients)):
+                    new_ingredient = Ingredient(
+                        name = ingredients[i]['name'],
+                        calories = ingredients[i]['calories'],
+                        serving_size_g = ingredients[i]['serving_size_g'],
+                        total_carbs = ingredients[i]['carbohydrates_total_g'],
+                        total_protein = ingredients[i]['protein_g'],
+                        total_fat = ingredients[i]['fat_total_g']
+                    )
+                    db.session.add(new_ingredient)
+                    db.session.commit()
+                    ingredient_to_connect = Ingredient.query.filter(Ingredient.name == ingredients[i]['name']).order_by(Ingredient.id.desc()).first()
+                    new_recipe_ingredient = RecipeIngredient(
+                        recipe_id = recipe_to_connect.id,
+                        ingredient_id = ingredient_to_connect.id
+                    )
 
-                db.session.add(new_recipe_ingredient)
-                db.session.commit()
+                    db.session.add(new_recipe_ingredient)
+                    db.session.commit()
+            else:
+                recipe_to_connect = Recipe.query.filter(Recipe.name == request.json['name']).order_by(Recipe.id.desc()).first()
+                for i in range(len(ingredients)):
+                    new_ingredient = Ingredient(
+                        name = ingredients[i]['name'],
+                        calories = ingredients[i]['calories'],
+                        serving_size_g = ingredients[i]['serving_size_g'],
+                        total_carbs = ingredients[i]['total_carbs'],
+                        total_protein = ingredients[i]['total_protein'],
+                        total_fat = ingredients[i]['total_fat']
+                    )
+                    db.session.add(new_ingredient)
+                    db.session.commit()
+                    ingredient_to_connect = Ingredient.query.filter(Ingredient.name == ingredients[i]['name']).order_by(Ingredient.id.desc()).first()
+                    new_recipe_ingredient = RecipeIngredient(
+                        recipe_id = recipe_to_connect.id,
+                        ingredient_id = ingredient_to_connect.id
+                    )
+
+                    db.session.add(new_recipe_ingredient)
+                    db.session.commit()
             new_recipe_dict = new_recipe.to_dict(rules=('-user',))
-            return make_response(new_recipe_dict, 200)
+            return make_response(new_recipe_dict, 201)
         except ValueError:
             return make_response({"error": ["validation errors"]}, 400)
     

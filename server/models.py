@@ -28,8 +28,8 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String, nullable=False)
 
     user_recipes = db.relationship('Recipe', back_populates='user', cascade='all, delete-orphan')
-    
-    serialize_rules = ('-user_recipes.user',)
+    posts = db.relationship('RecipePost', backref='user', cascade='all, delete-orphan')
+    serialize_rules = ('-user_recipes.user', '-posts.user')
     
 
     @validates('username')
@@ -76,8 +76,9 @@ class Recipe(db.Model, SerializerMixin):
 
     recipe_ingredients = db.relationship('RecipeIngredient', back_populates='recipe', cascade='all, delete-orphan')
     user = db.relationship('User', back_populates='user_recipes')
+    posts = db.relationship('RecipePost', backref="recipe", cascade="all, delete-orphan")
 
-    serialize_rules = ('-recipe_ingredients.recipe',)
+    serialize_rules = ('-recipe_ingredients.recipe', '-posts.recipe')
 
     @validates('name')
     def validate_name(self, key, name):
@@ -120,3 +121,17 @@ class RecipeIngredient(db.Model, SerializerMixin):
     recipe = db.relationship('Recipe', back_populates='recipe_ingredients')
 
     serialize_rules = ('-ingredient.recipe_ingredients', '-recipe.recipe_ingredients')
+
+
+class RecipePost(db.Model, SerializerMixin):
+    __tablename__ = 'posts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    post_message = db.Column(db.String)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    # user_post = db.relationship('User', back_populates="posts")
+    # recipe = db.relationship('Recipe', back_populates="posts")
+
+    serialize_rules = ('-user.posts', '-recipe.posts')

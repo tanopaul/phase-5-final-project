@@ -4,16 +4,20 @@ import food3 from '../assets/food-img-3.png';
 import food4 from '../assets/food-img-4.png';
 import food5 from '../assets/food-img-5.png';
 import food6 from '../assets/food-img-6.png';
-import { useState } from "react";
+import { useState, useContext } from "react";
 import {useNavigate, NavLink } from 'react-router-dom';
 import Nav from './Nav';
+import { UserContext } from './Context';
 
-function RecipeForm({user, handleUser, handleAddRecipe}) {
+function RecipeForm({handleAddRecipe}) {
+    const {user} = useContext(UserContext);
     const id = user.id
     const navigate = useNavigate()
     const apiKey = 'd8IlTYSoq2AAvWG74ub82A==TYmk8VnG4jxNh9zX'
     const [count, setCount] = useState(3)
-    const [recipe, setRecipe] = useState({
+    const [confirmIngredients, setConfirmIngredients] = useState(false)
+    const [validForm, setValidForm] = useState(true)
+    const [recipeForm, setRecipeForm] = useState({
         category: '',
         name: '',
         instructions: '',
@@ -40,7 +44,7 @@ function RecipeForm({user, handleUser, handleAddRecipe}) {
 
     function handleRecipeForm(e) {
         const {name, value} = e.target;
-        setRecipe({...recipe, [name]: value})
+        setRecipeForm({...recipeForm, [name]: value})
     }
 
     function handleAddIngredient(ingredientNum) {
@@ -51,9 +55,9 @@ function RecipeForm({user, handleUser, handleAddRecipe}) {
 
     const mappedIngredients = ingredients.map(ingredient => {
         return (
-            <div key={ingredient}>
-                <input onChange={handleQuery} name={`quantWeight${ingredient}`} value={formIngredients.quantWeight} placeholder='Weight or Quantity (ex. 2 eggs or 1lb beef'/>
-                <input onChange={handleQuery} name={`ingName${ingredient}`} value={formIngredients.ingName} placeholder='Ingredient Name'/>
+            <div className='recipe-form-ingredients' key={ingredient}>
+                <input autoComplete='off' onChange={handleQuery} name={`quantWeight${ingredient}`} value={formIngredients.quantWeight} placeholder='Weight or Quantity (ex. 2 eggs or 1lb beef'/>
+                <input autoComplete='off' onChange={handleQuery} name={`ingName${ingredient}`} value={formIngredients.ingName} placeholder='Ingredient Name'/>
             </div>
         )
     })
@@ -64,14 +68,15 @@ function RecipeForm({user, handleUser, handleAddRecipe}) {
             urlQuery.push(formIngredients[property])
         }
         let query = urlQuery.join(' ')
-
+        console.log(query)
         fetch(`https://api.api-ninjas.com/v1/nutrition?query=${query}`, {
             method: "GET",
             headers: {'X-Api-Key': apiKey},
             contentType: 'application/json'
         })
         .then(resp => resp.json())
-        .then(data => setRecipe({...recipe, ingredients: data}))
+        .then(data => setRecipeForm({...recipeForm, ingredients: data}))
+        setConfirmIngredients(!confirmIngredients)
     }
 
     function handleSubmit(e) {
@@ -80,44 +85,71 @@ function RecipeForm({user, handleUser, handleAddRecipe}) {
         fetch('/recipes', {
             method: "POST",
             headers: {"Content-Type": 'application/json'},
-            body: JSON.stringify(recipe)
+            body: JSON.stringify(recipeForm)
         })
-        .then(response => response.json())
+        .then(res => {
+            if (res.status === 201){
+                return res.json()
+            } else if (res.status === 400){
+                setValidForm(false)
+                return Promise.reject('Invalid Recipe')
+            }
+        })
         .then(data => {
             handleAddRecipe(data)
             navigate('/main')
-        }
-        )}
+        })
+        .catch((error) => console.error("error", error));
+        
+    }
+        
 
+        // function handleLog() {
+        //     console.log(recipeForm)
+        // }
+
+        const warningStyles = {
+            color: "white",
+            marginBottom: "10px",
+            width: "80%",
+            textAlign: 'center',
+            textShadow: '0 0 2px red',
+            backgroundColor: 'red',
+            borderRadius: "10px",
+            padding: '5px'
+        }
 
     return (
       <div>
-        <Nav handleUser={handleUser} />
-        <div>
-            <div>
-                <img src={food1} alt='food' />
-                <img src={food2} alt='food' />
-                <img src={food3} alt='food' />
-                <img src={food4} alt='food' />
-                <img src={food5} alt='food' />
-                <img src={food6} alt='food' />
+        <Nav/>
+        <header className='header'>  
+            <div className='header-food-images'>
+                <img src={food5} alt='food' className='food-5' />
+                <img src={food1} alt='food' className='food-1' />
+                <img src={food2} alt='food' className='food-2' />
+                <img src={food3} alt='food' className='food-3' />
+                <img src={food4} alt='food' className='food-4' />
+                <img src={food6} alt='food' className='food-6' />
             </div>
-            <div>
-                <span>FIT</span><span>x</span><span>FLAV</span>
+            <div className='header-title'>
+                <span className='header-fit'>FIT</span><span className='header-x'>x</span><span className='header-flav'>FLAV</span>
             </div>
-        </div>
-        <div>
-            <form onSubmit={handleSubmit}>
-                <input placeholder='Category' name='category' value={recipe.category} onChange={handleRecipeForm} />
-                <input placeholder='Recipe Name' name='name' value={recipe.name} onChange={handleRecipeForm} />
-                <input placeholder='Instructions' name='instructions' value={recipe.instructions} onChange={handleRecipeForm} />
-                <input placeholder='Image URL' name='main_image' value={recipe.main_image} onChange={handleRecipeForm} />
+        </header>
+        <section className='recipe-form-section'>
+            <h1>Add A Recipe</h1>
+            <form className='add-recipe-form' onSubmit={handleSubmit}>
+                <input autoComplete='off' placeholder='Category' name='category' value={recipeForm.category} onChange={handleRecipeForm} />
+                <input autoComplete='off' placeholder='Recipe Name' name='name' value={recipeForm.name} onChange={handleRecipeForm} />
+                <input autoComplete='off' placeholder='Image URL' name='main_image' value={recipeForm.main_image} onChange={handleRecipeForm} />
+                <textarea className="recipe-form-text-area" autoComplete='off' placeholder='Instructions (Separated by Semicolon)' name='instructions' value={recipeForm.instructions} onChange={handleRecipeForm} />
                 {mappedIngredients}
-                <div onClick={() => handleAddIngredient(count + 1)}>Add Ingredient</div>
-                <div onClick={handleIngredientConfirmation}>Confirm Ingredients</div>
-                <button>Submit</button>
+                <div className='recipe-form-button' onClick={() => handleAddIngredient(count + 1)}>Add Row</div>
+                {confirmIngredients ? null : <div className='recipe-form-button' onClick={handleIngredientConfirmation}>Confirm Ingredients</div>}
+                {confirmIngredients ? <button className='recipe-form-button'>Submit</button> : null}
             </form>
-        </div>
+            {validForm ? null : <p style={warningStyles}>Instructions too short!</p>}
+            
+        </section>
       </div>
   
     )
