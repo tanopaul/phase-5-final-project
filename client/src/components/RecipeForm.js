@@ -9,6 +9,9 @@ import {useNavigate, NavLink } from 'react-router-dom';
 import Nav from './Nav';
 import { UserContext } from './Context';
 
+// Add Recipe form where users can add their personalized recipes. Each ingredient is searched in the free api_ninjas nutrition API, which
+// provides the calorie count for each recipe. 
+
 function RecipeForm({handleAddRecipe}) {
     const {user} = useContext(UserContext);
     const id = user.id
@@ -17,6 +20,7 @@ function RecipeForm({handleAddRecipe}) {
     const [count, setCount] = useState(3)
     const [confirmIngredients, setConfirmIngredients] = useState(false)
     const [validForm, setValidForm] = useState(true)
+    const [ingredients, setIngredients] = useState([1, 2, 3])
     const [recipeForm, setRecipeForm] = useState({
         category: '',
         name: '',
@@ -40,19 +44,22 @@ function RecipeForm({handleAddRecipe}) {
         setFormIngredients({...formIngredients, [name]: value})
     }
 
-    const [ingredients, setIngredients] = useState([1, 2, 3])
 
     function handleRecipeForm(e) {
         const {name, value} = e.target;
         setRecipeForm({...recipeForm, [name]: value})
     }
 
+    // The form starts with three ingredients that can be added by default with an "add row" button. If the user clicks the "add row" button, I needed a way to programatically add 
+    // a new row while also creating new form ingredients to send to the api_ninjas API. The function below adds a new ingredients row to the form and adds new form ingredients to 
+    // the formIngredients variable.
     function handleAddIngredient(ingredientNum) {
         setIngredients([...ingredients, ingredientNum])
         setFormIngredients({...formIngredients, [`quantWeight${ingredientNum}`]: '' ,[`ingName${ingredientNum}`]: ''})
         setCount(ingredientNum)
     }
 
+    // each ingredient input is mapped and rendered into the DOM, the api_ninjas nutrition API needs at least a weight and an ingredient name to return a response.
     const mappedIngredients = ingredients.map(ingredient => {
         return (
             <div className='recipe-form-ingredients' key={ingredient}>
@@ -62,6 +69,11 @@ function RecipeForm({handleAddRecipe}) {
         )
     })
 
+    // Once a user has completed the form, they'll be prompted to confirm the ingredients. Once they click, the function below is triggered.
+    // On the api_ninjas website, their example to query their database works like this for example: "1lb brisket 1lb fries 1lb cheese ".
+    // This query will return three different ingredient objects for brisket, fries, and cheese with each ingredient's calories.
+    // This function parses through each ingredient added into the inputs, places them into an array, joins the strings together, and sends them all as one query. 
+    // Once the objects are received, they're placed into the recipe form variable to be submitted into the database.
     function handleIngredientConfirmation() {
         let urlQuery = []
         for (const property in formIngredients) {
@@ -78,6 +90,8 @@ function RecipeForm({handleAddRecipe}) {
         setConfirmIngredients(!confirmIngredients)
     }
 
+    // Once the ingredient objects are properly set into the recipeForm variable, the user is prompted to submit their recipe to the database. After a successful post, the user is
+    // navigated back to the main page where the recipes are stored to view their new recipe. If interested, check out the README to see demos on how the app functions. 
     function handleSubmit(e) {
         e.preventDefault()
 
