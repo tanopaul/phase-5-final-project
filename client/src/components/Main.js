@@ -13,16 +13,9 @@ import RecipeCard from './RecipeCard';
 
 function Main({ handleDeleteRecipe}) {
     const {user, noPosts , setRecipe, recipesToDisplay, setRecipesToDisplay} = useContext(UserContext);
-    // const [addPost, setAddPost] = useState(false)
+    
     const [categoryArray, setCategoryArray] = useState([])
-    // const [postForm, setPostForm] = useState({
-    //     message: '',
-    //     recipe_id: ''
-    // })
-    // console.log(user.user_recipes[0].name) 
-   
-    // const [recipesToDisplay, setRecipesToDisplay] = useState(user.user_recipes)
-    console.log(recipesToDisplay)
+
     useEffect(() => {
         let categoryArray = []
         if (user) {
@@ -35,17 +28,6 @@ function Main({ handleDeleteRecipe}) {
     }, [recipesToDisplay])
 
 
-    // const navigate = useNavigate(0);
-
-    // function handleDelete(id) {
-    //     fetch(`/recipes/${id}`, {
-    //         method: "DELETE",
-    //         headers:{ "Content-Type": "application/json"},
-    //     })
-    //     .then(resp => resp.json())
-    //     .then(data => handleDeleteRecipe(id))
-    // }
-
     function handleFilterRecipes(e) {
         if (e.target.innerText === 'All Recipes') {
             setRecipesToDisplay(user.user_recipes)
@@ -55,34 +37,7 @@ function Main({ handleDeleteRecipe}) {
         }
     }
 
-    // function handlePost(e) {
-    //     e.preventDefault()
-    //     fetch('/posts', {
-    //         method: "POST",
-    //         headers: {"Content-Type": "application/json"},
-    //         body: JSON.stringify({
-    //             message: postForm.message,
-    //             user_id: user.id,
-    //             recipe_id: postForm.recipe_id
-    //         })
-    //     })
-    //     .then(resp => resp.json())
-    //     .then(data => console.log(data))
-        
-    // }
 
-    // function handleChange(e) {
-    //     const {name, value} = e.target
-    //     setPostForm({...postForm, [name]: value})
-        
-    // }
-
-    // function handleAddPost(recipe) {
-    //     setAddPost(!addPost)
-    //     setPostForm({...postForm, recipe_id: recipe})
-    // }
-    
-    // console.log(noPosts)
 
     return (
         <div>
