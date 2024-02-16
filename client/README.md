@@ -1,5 +1,5 @@
 # FitFlav
-## A Web Recipe Web App for Losing Weight and Sharing Ideas 
+## A Recipe Web App for Losing Weight and Sharing Ideas 
 
 
 
