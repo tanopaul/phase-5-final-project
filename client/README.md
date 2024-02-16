@@ -9,6 +9,11 @@
 - Increment and decrement the total calorie count in each individual recipe, simultaneously incrementing and decrementing the quantities for each ingredient.
 - Post their personalized recipe to the Community route so that any other user can favorite and add the recipe into their personal recipes as well.
 
+### Tools used:
+- React.js
+- Python with Flask
+- SQL
+
 ---
 
 
