@@ -17,17 +17,6 @@ function Recipe({handleUpdateRecipes}) {
         category: ''
     }
     const [updateForm, setUpdateForm] = useState(initForm)
-    // const ingredientsToRender = recipeIngredients.map(ingredient => {
-    //     return (
-    //         <div key={ingredient.id}>
-    //             <h2 className="recipe-ingredient">{Math.floor(ingredient.ingredient.serving_size_g)}g {ingredient.ingredient.name}</h2>
-    //         </div>
-    //     )
-    // })
-
-    // const instructionsArray = recipeToRender.instructions.split(';').map(instruction => {
-    //     return <li key={recipeToRender.instructions.indexOf(instruction)}>{instruction}</li>
-    // })
     
 
     function handleChange(e) {
@@ -114,8 +103,6 @@ function Recipe({handleUpdateRecipes}) {
                 setRecipeToRender(data)
             })
         }
-
-        
         setEditCategory(false)
         setEditName(false)
         setEditInstructions(false)
@@ -124,12 +111,6 @@ function Recipe({handleUpdateRecipes}) {
    
 
     const totalCalories = recipeCalories.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
-    // // <h1>~{totalCalories}</h1>
-
-
-    // <p className="recipe-page-instructions">{recipeToRender.instructions}<span><button onClick={handleEditInstructions}>✏️</button></span></p>
-    //             {editInstructions ? <form onSubmit={handleSubmit}><textarea onChange={handleChange} name='instructions' value={updateForm.instructions} /><button>Submit</button></form> : null}
-
 
     return (
       <div>
