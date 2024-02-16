@@ -104,20 +104,16 @@ function RecipeForm({handleAddRecipe}) {
     }
         
 
-        // function handleLog() {
-        //     console.log(recipeForm)
-        // }
-
-        const warningStyles = {
-            color: "white",
-            marginBottom: "10px",
-            width: "80%",
-            textAlign: 'center',
-            textShadow: '0 0 2px red',
-            backgroundColor: 'red',
-            borderRadius: "10px",
-            padding: '5px'
-        }
+    const warningStyles = {
+        color: "white",
+        marginBottom: "10px",
+        width: "80%",
+        textAlign: 'center',
+        textShadow: '0 0 2px red',
+        backgroundColor: 'red',
+        borderRadius: "10px",
+        padding: '5px'
+    }
 
     return (
       <div>
