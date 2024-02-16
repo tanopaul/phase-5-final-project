@@ -68,7 +68,6 @@ function RecipeForm({handleAddRecipe}) {
             urlQuery.push(formIngredients[property])
         }
         let query = urlQuery.join(' ')
-        console.log(query)
         fetch(`https://api.api-ninjas.com/v1/nutrition?query=${query}`, {
             method: "GET",
             headers: {'X-Api-Key': apiKey},
