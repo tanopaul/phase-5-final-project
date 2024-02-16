@@ -38,14 +38,6 @@ function App() {
   }, []);
 
 
-
-//   useEffect(() => {
-//     if (!user) {
-//         navigate('/')
-//     }
-// }, [])
-
-
   function handleDeleteRecipe(id) {
     const newRecipes = user.user_recipes.filter(recipe => recipe.id !== id)
     setUser({...user, user_recipes: newRecipes})
@@ -53,7 +45,6 @@ function App() {
   }
 
   function handleAddRecipe(recipe) {
-    console.log(recipe)
     setUser({...user, user_recipes: [...user.user_recipes, recipe]})
     setRecipesToDisplay([...recipesToDisplay, recipe])
     setNoPosts(false)
